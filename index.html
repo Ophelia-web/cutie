@@ -3,37 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chinchi Land · 南美栗鼠聊天站</title>
+    <title>Chinchi Sakura · 南美栗鼠和风对话屋</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="sparkle-layer" aria-hidden="true">
-      <span>✨</span><span>⭐</span><span>🌸</span><span>☁️</span><span>✨</span>
+    <div class="petals-layer" aria-hidden="true">
+      <span>🌸</span><span>🍡</span><span>✨</span><span>🌸</span><span>☁️</span>
     </div>
 
     <main class="app-shell">
       <header class="hero-card">
-        <p class="tag">软萌对话实验室</p>
-        <h1>Chinchi Land</h1>
+        <p class="tag">日式软萌茶屋</p>
+        <h1>Chinchi Sakura</h1>
         <p class="subtitle">
-          和一只超可爱的南美栗鼠聊天吧！<br />
-          无需 API Key，使用免费本地模型（首次会下载模型文件）。
+          和南美栗鼠 Chichi 一起喝茶聊天吧。<br />
+          无需任何 API Key，使用免费在线模型，手机和电脑都可用。
         </p>
       </header>
 
       <section class="chat-card" aria-label="聊天区域">
         <div class="chat-topbar">
-          <div class="pet-avatar">🐭</div>
-          <div>
+          <div class="pet-avatar" aria-hidden="true">🐭</div>
+          <div class="title-wrap">
             <h2>栗鼠小助手 Chichi</h2>
-            <p id="modelStatus">模型准备中...</p>
+            <p id="modelStatus">正在连接免费模型...</p>
           </div>
         </div>
 
         <div id="quickActions" class="quick-actions" aria-label="快捷问题">
-          <button type="button" class="chip">今天心情不好，安慰我</button>
-          <button type="button" class="chip">讲一个南美栗鼠小知识</button>
-          <button type="button" class="chip">给我一个可爱早安祝福</button>
+          <button type="button" class="chip">今天有点低落，抱抱我</button>
+          <button type="button" class="chip">说个南美栗鼠冷知识</button>
+          <button type="button" class="chip">帮我写一句元气日语早安</button>
+          <button type="button" class="chip">推荐一首治愈系动画歌</button>
         </div>
 
         <div id="chatList" class="chat-list" aria-live="polite"></div>
@@ -43,11 +44,11 @@
             id="chatInput"
             type="text"
             maxlength="300"
-            placeholder="输入你想和栗鼠说的话..."
+            placeholder="输入想说的话，比如：今天好累，想听你安慰..."
             autocomplete="off"
             required
           />
-          <button id="sendBtn" type="submit">发送</button>
+          <button id="sendBtn" type="submit" aria-label="发送消息">发送</button>
         </form>
       </section>
     </main>

@@ -8,9 +8,9 @@ const quickActionsEl = document.querySelector("#quickActions");
 const systemPrompt =
   "你是Chichi，一只超级可爱、温柔、积极、喜欢科普南美栗鼠的小助手。回答简短亲切，多用可爱语气词，适度加emoji。";
 
-let engine = null;
-let modelReady = false;
 let generating = false;
+let onlineReady = false;
+let reconnecting = false;
 
 const chatHistory = [
   { role: "system", content: systemPrompt },
@@ -67,48 +67,56 @@ function cuteFallbackReply(userText) {
 }
 
 async function initModel() {
-  setStatus("正在加载免费模型引擎...");
-  setGeneratingState(true);
-
+  reconnecting = true;
+  setStatus("正在连接免费在线模型...");
   try {
-    const { CreateMLCEngine } = await import(
-      "https://esm.run/@mlc-ai/web-llm@0.2.79"
-    );
-
-    const model = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-    const initProgressCallback = (report) => {
-      if (!report) return;
-      const t = report.text ?? "模型加载中...";
-      setStatus(t);
-    };
-
-    engine = await CreateMLCEngine(model, { initProgressCallback });
-    modelReady = true;
-    setStatus("模型已就绪（免费本地推理）");
+    const response = await fetch("https://text.pollinations.ai/openai/models");
+    if (!response.ok) {
+      throw new Error(`model list failed: ${response.status}`);
+    }
+    onlineReady = true;
+    setStatus("免费在线模型已就绪（无需 API Key）");
   } catch (error) {
     console.error(error);
-    modelReady = false;
-    setStatus("模型加载失败，已启用可爱兜底回复模式");
+    onlineReady = false;
+    setStatus("在线模型暂不可用，已启用可爱兜底回复模式");
   } finally {
-    setGeneratingState(false);
+    reconnecting = false;
   }
 }
 
-async function askModel(userText) {
-  if (!modelReady || !engine) {
-    return cuteFallbackReply(userText);
-  }
-
+async function askModel() {
   const recentHistory = chatHistory.filter((m) => m.role !== "system").slice(-10);
   const messages = [{ role: "system", content: systemPrompt }, ...recentHistory];
-  const response = await engine.chat.completions.create({
-    messages,
-    temperature: 0.7,
-    max_tokens: 180,
+
+  if (!onlineReady) {
+    if (!reconnecting) {
+      await initModel();
+    }
+    if (!onlineReady) {
+      throw new Error("online model unavailable");
+    }
+  }
+
+  const response = await fetch("https://text.pollinations.ai/openai", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "openai-fast",
+      messages,
+      temperature: 0.7,
+      max_tokens: 180,
+    }),
   });
+  if (!response.ok) {
+    throw new Error(`chat failed: ${response.status}`);
+  }
+  const data = await response.json();
 
   return (
-    response.choices?.[0]?.message?.content?.trim() ||
+    data.choices?.[0]?.message?.content?.trim() ||
     "叽？我刚刚打了个小盹，可以再说一遍吗～"
   );
 }
@@ -128,15 +136,15 @@ chatFormEl.addEventListener("submit", async (event) => {
   setGeneratingState(true);
 
   try {
-    const answer = await askModel(userText);
+    const answer = await askModel();
     typing.text.textContent = answer;
     typing.item.classList.remove("typing");
     chatHistory.push({ role: "assistant", content: answer });
   } catch (error) {
     console.error(error);
-    typing.text.textContent =
-      "呜哇，刚刚脑袋短路了一下 > < 你再戳我一次试试，我会努力回答哒！";
+    typing.text.textContent = cuteFallbackReply(userText);
     typing.item.classList.remove("typing");
+    setStatus("网络有点波动，已切换兜底回复模式");
   } finally {
     setGeneratingState(false);
     chatInputEl.focus();
